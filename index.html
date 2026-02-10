@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 Rocket.Chat Photo + Location Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2D8CFF 0%, #1A7AE6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border-left: 5px solid #2D8CFF;
+        }
+        
+        .section h2 {
+            color: #2D8CFF;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .media-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        #camera, #photoPreview {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 25px 0;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #2D8CFF;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1A7AE6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(42, 139, 242, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #FF4081;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #E91E63;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px dashed #2D8CFF;
+            margin-top: 30px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            margin: 15px 0;
+            resize: vertical;
+            min-height: 150px;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 25px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-camera"></i> Rocket.Chat Photo + Location</h1>
+            <p>Capture photos with automatic GPS location detection</p>
+            <div style="margin-top: 15px;">
+                <span class="badge badge-success"><i class="fas fa-mobile-alt"></i> Mobile Friendly</span>
+                <span class="badge badge-warning"><i class="fas fa-shield-alt"></i> Privacy Safe</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Camera Section -->
+            <div class="section">
+                <h2><i class="fas fa-camera"></i> 1. Camera</h2>
+                <div class="media-container">
+                    <video id="camera" autoplay playsinline></video>
+                    <img id="photoPreview" alt="Captured Photo Preview" style="display: none;">
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-danger" onclick="enableCamera()" id="cameraBtn">
+                        <i class="fas fa-video"></i> Enable Camera
+                    </button>
+                    <button class="btn btn-warning" onclick="capturePhoto()" id="captureBtn" disabled>
+                        <i class="fas fa-camera"></i> Capture Photo
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Location Section -->
+            <div class="section">
+                <h2><i class="fas fa-map-marker-alt"></i> 2. Location</h2>
+                <div id="locationStatus" class="status-box status-info">
+                    <i class="fas fa-info-circle"></i> Click "Get Location" to detect your GPS coordinates
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="getLocation()" id="locationBtn">
+                        <i class="fas fa-map-marker-alt"></i> Get My Location
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status Messages -->
+            <div id="statusMessages"></div>
+            
+            <!-- Generate Message Section -->
+            <div class="section" style="display: none;" id="generateSection">
+                <h2><i class="fas fa-comment-alt"></i> 3. Generate Message</h2>
+                <p>Both photo and location captured! Ready to generate your Rocket.Chat message.</p>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="generateMessage()" id="generateBtn">
+                        <i class="fas fa-magic"></i> Generate Rocket.Chat Message
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Result Section -->
+            <div id="resultSection" class="result-box" style="display: none;">
+                <h2><i class="fas fa-check-circle" style="color: #28a745;"></i> Message Ready!</h2>
+                
+                <div id="finalMessage"></div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copy Message to Clipboard
+                    </button>
+                    <button class="btn btn-success" onclick="downloadPhoto()">
+                        <i class="fas fa-download"></i> Download Photo
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> How to Use:</h3>
+                <ol>
+                    <li>Click <strong>"Enable Camera"</strong> and allow camera access</li>
+                    <li>Click <strong>"Capture Photo"</strong> to take a picture</li>
+                    <li>Click <strong>"Get My Location"</strong> and allow location access</li>
+                    <li>Click <strong>"Generate Rocket.Chat Message"</strong></li>
+                    <li><strong>Copy the message</strong> and paste in Rocket.Chat</li>
+                    <li><strong>Download the photo</strong> and upload to Rocket.Chat</li>
+                </ol>
+                <p style="margin-top: 15px; font-style: italic;">
+                    <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> On mobile, hold phone horizontally for better photos!
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><i class="fas fa-code"></i> Built for Rocket.Chat | Works on all devices</p>
+            <p style="font-size: 0.9rem; margin-top: 5px;">All processing happens in your browser - no data is stored on servers</p>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // Global variables
+        let capturedPhoto = null;
+        let locationData = null;
+        let cameraStream = null;
+        
+        // DOM elements
+        const camera = document.getElementById('camera');
+        const photoPreview = document.getElementById('photoPreview');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const locationBtn = document.getElementById('locationBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const generateSection = document.getElementById('generateSection');
+        const resultSection = document.getElementById('resultSection');
+        const locationStatus = document.getElementById('locationStatus');
+        
+        // Enable camera function
+        async function enableCamera() {
+            try {
+                showStatus('🔄 Accessing camera...', 'info');
+                
+                // Try to use rear camera on mobile devices
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: 'environment' }, // Prefer rear camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                camera.srcObject = cameraStream;
+                
+                // Update button
+                cameraBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Camera Active';
+                cameraBtn.classList.remove('btn-danger');
+                cameraBtn.classList.add('btn-success');
+                cameraBtn.disabled = false;
+                
+                captureBtn.disabled = false;
+                
+                showStatus('✅ Camera enabled! Position your subject and click "Capture Photo"', 'success');
+                
+            } catch (error) {
+                showStatus('❌ Camera error: ' + error.message, 'error');
+                cameraBtn.disabled = false;
+            }
+        }
+        
+        // Capture photo function
+        function capturePhoto() {
+            if (!cameraStream) {
+                showStatus('❌ Please enable camera first', 'error');
+                return;
+            }
+            
+            const canvas = document.getElementById('canvas');
+            const video = camera;
+            
+            // Set canvas dimensions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw current video frame to canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to data URL (JPEG format, 80% quality)
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Show preview
+            photoPreview.src = capturedPhoto;
+            photoPreview.style.display = 'block';
+            camera.style.display = 'none';
+            
+            // Stop camera stream to save battery
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+            
+            // Update button
+            cameraBtn.innerHTML = '<i class="fas fa-video"></i> Camera Off';
+            cameraBtn.classList.remove('btn-success');
+            cameraBtn.classList.add('btn-danger');
+            cameraBtn.disabled = false;
+            captureBtn.disabled = true;
+            
+            showStatus('✅ Photo captured! Now get your location.', 'success');
+            checkIfReady();
+        }
+        
+        // Get location function
+        function getLocation() {
+            showStatus('🔄 Detecting your location... This may take a few seconds.', 'info');
+            locationBtn.disabled = true;
+            locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Detecting...';
+            
+            if (!navigator.geolocation) {
+                showStatus('❌ Geolocation not supported by your browser', 'error');
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get My Location';
+                return;
+            }
+            
+            // Get location with high accuracy
+            navigator.geolocation.getCurrentPosition(
+                // Success callback
+                function(position) {
+                    locationData = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Update location status
+                    locationStatus.innerHTML = `
+                        <i class="fas fa-check-circle"></i> 
+                        Location detected! 
+                        Accuracy: <strong>${Math.round(locationData.accuracy)} meters</strong>
+                        <br>
+                        <small>Coordinates: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}</small>
+                    `;
+                    locationStatus.className = 'status-box status-success';
+                    
+                    locationBtn.disabled = false;
+                    locationBtn.innerHTML = '<i class="fas fa-check-circle"></i> Location Captured';
+                    locationBtn.classList.remove('btn-success');
+                    locationBtn.classList.add('btn-primary');
+                    
+                    showStatus('✅ Location captured successfully!', 'success');
+                    checkIfReady();
+                },
+                // Error callback
+                function(error) {
+                    let errorMessage = '❌ Location error: ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '🚫 Location access was denied. Please allow location access in your browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '⚠️ Location information unavailable. Make sure location/GPS is enabled on your device.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '⏰ Location request timed out. Please try again.';
+                            break;
+                        default:
+                            errorMessage = '❌ Unknown error getting location.';
+                    }
+                    
+                    showStatus(errorMessage, 'error');
+                    locationBtn.disabled = false;
+                    locationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get My Location';
+                },
+                // Options
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        }
+        
+        // Check if both photo and location are ready
+        function checkIfReady() {
+            if (capturedPhoto && locationData) {
+                generateSection.style.display = 'block';
+                showStatus('✅ Ready! Click "Generate Rocket.Chat Message" to create your message.', 'success');
+            }
+        }
+        
+        // Generate message for Rocket.Chat
+        function generateMessage() {
+            if (!capturedPhoto || !locationData) {
+                showStatus('❌ Please capture photo and get location first', 'error');
+                return;
+            }
+            
+            // Create Google Maps link
+            const mapsUrl = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
+            const shortMapsUrl = `https://maps.google.com/?q=${locationData.latitude},${locationData.longitude}`;
+            
+            // Format timestamp
+            const now = new Date();
+            const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            
+            // Create the message for Rocket.Chat
+            const message = `📸 **PHOTO WITH LOCATION REPORT**\n\n` +
+                          `📍 **Location:** ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}\n` +
+                          `🗺️ **Map:** ${shortMapsUrl}\n` +
+                          `📏 **Accuracy:** ${Math.round(locationData.accuracy)} meters\n` +
+                          `⏰ **Timestamp:** ${timestamp}\n` +
+                          `📎 **Photo attached** (see below)\n\n` +
+                          `_Generated via Photo+Location Tool_`;
+            
+            // Display the result
+            document.getElementById('finalMessage').innerHTML = `
+                <p>Copy the message below and paste it in Rocket.Chat:</p>
+                <textarea id="chatMessage" readonly>${message}</textarea>
+                <p>Then download the photo and upload it to Rocket.Chat.</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <img src="${capturedPhoto}" style="max-width: 200px; border-radius: 10px; border: 2px solid #dee2e6;">
+                    <p style="margin-top: 10px; font-size: 0.9rem;"><i class="fas fa-image"></i> Photo Preview</p>
+                </div>
+            `;
+            
+            resultSection.style.display = 'block';
+            generateSection.style.display = 'none';
+            
+            // Scroll to result
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Copy message to clipboard
+        function copyToClipboard() {
+            const textarea = document.getElementById('chatMessage');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showStatus('✅ Message copied to clipboard! Now paste it in Rocket.Chat.', 'success');
+                    
+                    // Show temporary confirmation
+                    const copyBtn = event.target;
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    copyBtn.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                        copyBtn.classList.remove('btn-success');
+                    }, 2000);
+                }
+            } catch (err) {
+                showStatus('❌ Failed to copy: ' + err, 'error');
+            }
+        }
+        
+        // Download photo
+        function downloadPhoto() {
+            if (!capturedPhoto) {
+                showStatus('❌ No photo to download', 'error');
+                return;
+            }
+            
+            const timestamp = new Date().getTime();
+            const filename = `rocketchat-photo-${timestamp}.jpg`;
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = capturedPhoto;
+            link.click();
+            
+            showStatus('✅ Photo downloaded! Now upload it to Rocket.Chat.', 'success');
+        }
+        
+        // Show status messages
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessages');
+            const statusClass = 'status-' + type;
+            
+            const statusElement = document.createElement('div');
+            statusElement.className = `status-box ${statusClass}`;
+            statusElement.innerHTML = message;
+            
+            // Add to top of status messages
+            statusDiv.insertBefore(statusElement, statusDiv.firstChild);
+            
+            // Remove after 5 seconds (except for success messages)
+            if (type !== 'success') {
+                setTimeout(() => {
+                    if (statusElement.parentNode) {
+                        statusElement.style.opacity = '0';
+                        statusElement.style.transition = 'opacity 0.5s';
+                        setTimeout(() => {
+                            if (statusElement.parentNode) {
+                                statusElement.parentNode.removeChild(statusElement);
+                            }
+                        }, 500);
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Auto-detect mobile device
+        window.addEventListener('load', function() {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                showStatus('📱 Mobile device detected. For best results, hold your phone horizontally when taking photos.', 'info');
+            }
+            
+            // Check if browser supports required features
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus('⚠️ Your browser may not support camera access. Try using Chrome, Firefox, or Safari.', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>
